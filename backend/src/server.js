@@ -8,6 +8,31 @@ require("dotenv").config();
 const app = express();
 const prisma = new PrismaClient();
 
+const createNotification = async (
+  userId,
+  type,
+  title,
+  message,
+  metadata = {}
+) => {
+  try {
+    const notification = await prisma.notification.create({
+      data: {
+        userId,
+        type,
+        title,
+        message,
+        metadata: JSON.stringify(metadata), // Para dados extras
+      },
+    });
+
+    console.log(`📢 Notificação criada: ${title} para usuário ${userId}`);
+    return notification;
+  } catch (error) {
+    console.error("❌ Erro ao criar notificação:", error);
+    return null;
+  }
+};
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -264,6 +289,137 @@ app.patch("/api/profile", authenticate, async (req, res) => {
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: "Erro ao atualizar perfil" });
+  }
+});
+app.get("/api/notifications", authenticate, async (req, res) => {
+  try {
+    const { limit = 20, page = 1 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const [notifications, total, unreadCount] = await Promise.all([
+      prisma.notification.findMany({
+        where: { userId: req.user.userId },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: parseInt(limit),
+      }),
+      prisma.notification.count({
+        where: { userId: req.user.userId },
+      }),
+      prisma.notification.count({
+        where: {
+          userId: req.user.userId,
+          isRead: false,
+        },
+      }),
+    ]);
+
+    res.json({
+      notifications: notifications.map((n) => ({
+        ...n,
+        metadata: n.metadata ? JSON.parse(n.metadata) : null,
+      })),
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / parseInt(limit)),
+      },
+      unreadCount,
+    });
+  } catch (error) {
+    console.error("Erro ao buscar notificações:", error);
+    res.status(500).json({ error: "Erro ao buscar notificações" });
+  }
+});
+
+// 2. Marcar notificação como lida
+app.patch("/api/notifications/:id/read", authenticate, async (req, res) => {
+  try {
+    const notification = await prisma.notification.update({
+      where: {
+        id: req.params.id,
+        userId: req.user.userId, // Segurança: só o dono
+      },
+      data: { isRead: true },
+    });
+
+    res.json({
+      ...notification,
+      metadata: notification.metadata
+        ? JSON.parse(notification.metadata)
+        : null,
+    });
+  } catch (error) {
+    if (error.code === "P2025") {
+      return res.status(404).json({ error: "Notificação não encontrada" });
+    }
+    res.status(500).json({ error: "Erro ao atualizar notificação" });
+  }
+});
+
+// 3. Marcar TODAS como lidas
+app.patch("/api/notifications/read-all", authenticate, async (req, res) => {
+  try {
+    await prisma.notification.updateMany({
+      where: {
+        userId: req.user.userId,
+        isRead: false,
+      },
+      data: { isRead: true },
+    });
+
+    res.json({ message: "Todas notificações marcadas como lidas" });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao atualizar notificações" });
+  }
+});
+
+// 4. Contador de não lidas (para badge)
+app.get("/api/notifications/unread-count", authenticate, async (req, res) => {
+  try {
+    const count = await prisma.notification.count({
+      where: {
+        userId: req.user.userId,
+        isRead: false,
+      },
+    });
+
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao contar notificações" });
+  }
+});
+
+// 5. Excluir notificação
+app.delete("/api/notifications/:id", authenticate, async (req, res) => {
+  try {
+    await prisma.notification.delete({
+      where: {
+        id: req.params.id,
+        userId: req.user.userId,
+      },
+    });
+
+    res.json({ message: "Notificação excluída" });
+  } catch (error) {
+    if (error.code === "P2025") {
+      return res.status(404).json({ error: "Notificação não encontrada" });
+    }
+    res.status(500).json({ error: "Erro ao excluir notificação" });
+  }
+});
+
+// 6. Excluir TODAS as notificações
+app.delete("/api/notifications", authenticate, async (req, res) => {
+  try {
+    await prisma.notification.deleteMany({
+      where: { userId: req.user.userId },
+    });
+
+    res.json({ message: "Todas notificações excluídas" });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao excluir notificações" });
   }
 });
 

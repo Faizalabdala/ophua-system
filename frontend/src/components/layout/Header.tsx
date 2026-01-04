@@ -1,4 +1,3 @@
-// frontend/src/components/layout/Header.tsx
 import React, { useState } from "react";
 import {
   AppBar,
@@ -12,25 +11,22 @@ import {
   Divider,
   ListItemIcon,
   ListItemText,
-  Badge,
 } from "@mui/material";
 import {
   Dashboard as DashboardIcon,
   People as PeopleIcon,
   Settings as SettingsIcon,
   ExitToApp as LogoutIcon,
-  Notifications as NotificationsIcon,
   Menu as MenuIcon,
 } from "@mui/icons-material";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import NotificationBell from "../NotificationBell"; // ← IMPORTE O NOVO COMPONENTE
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [notificationAnchor, setNotificationAnchor] =
-    useState<null | HTMLElement>(null);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -40,17 +36,10 @@ const Header: React.FC = () => {
     setAnchorEl(null);
   };
 
-  const handleNotificationOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setNotificationAnchor(event.currentTarget);
-  };
-
-  const handleNotificationClose = () => {
-    setNotificationAnchor(null);
-  };
-
   const handleLogout = () => {
     logout();
     handleMenuClose();
+    navigate("/login");
   };
 
   const handleNavigation = (path: string) => {
@@ -58,12 +47,19 @@ const Header: React.FC = () => {
     handleMenuClose();
   };
 
-  // Notificações fictícias para demonstração
-  const notifications = [
-    { id: 1, text: "Novo pedido de Francisco", time: "2 min ago" },
-    { id: 2, text: "Pedido #00123 está pronto", time: "1 hora ago" },
-    { id: 3, text: "Deyse criou 3 novos pedidos", time: "2 horas ago" },
-  ];
+  // Obter label do perfil
+  const getRoleLabel = (role?: string): string => {
+    switch (role) {
+      case "ADMIN":
+        return "Administrador";
+      case "RESELLER":
+        return "Revendedor";
+      case "PRODUCER":
+        return "Produtor";
+      default:
+        return "Utilizador";
+    }
+  };
 
   return (
     <AppBar position="static" elevation={1}>
@@ -78,24 +74,6 @@ const Header: React.FC = () => {
           }}
           onClick={() => navigate("/dashboard")}
         >
-          {/* Logotipo */}
-          <Box
-            component="img"
-            src="/logo.png"
-            alt="Ophua Logo"
-            sx={{
-              height: 40,
-              width: "auto",
-              mr: 2,
-              filter: "brightness(0) invert(1)",
-            }}
-            onError={(e) => {
-              // Fallback se o logotipo não carregar
-              const target = e.target as HTMLImageElement;
-              target.style.display = "none";
-            }}
-          />
-
           <Box>
             <Typography
               variant="h6"
@@ -122,54 +100,8 @@ const Header: React.FC = () => {
           </Box>
         </Box>
 
-        {/* Notificações (apenas para Admin/Producer) */}
-        {(user?.role === "ADMIN" || user?.role === "PRODUCER") && (
-          <>
-            <IconButton
-              size="large"
-              aria-label="show notifications"
-              color="inherit"
-              onClick={handleNotificationOpen}
-              sx={{ mr: 1 }}
-            >
-              <Badge badgeContent={notifications.length} color="error">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
-
-            <Menu
-              anchorEl={notificationAnchor}
-              open={Boolean(notificationAnchor)}
-              onClose={handleNotificationClose}
-              PaperProps={{
-                sx: {
-                  width: 320,
-                  maxHeight: 400,
-                  mt: 1.5,
-                },
-              }}
-            >
-              <Box sx={{ p: 2, borderBottom: "1px solid #e0e0e0" }}>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  Notificações
-                </Typography>
-              </Box>
-              {notifications.map((notification) => (
-                <MenuItem
-                  key={notification.id}
-                  onClick={handleNotificationClose}
-                >
-                  <Box sx={{ width: "100%" }}>
-                    <Typography variant="body2">{notification.text}</Typography>
-                    <Typography variant="caption" color="textSecondary">
-                      {notification.time}
-                    </Typography>
-                  </Box>
-                </MenuItem>
-              ))}
-            </Menu>
-          </>
-        )}
+        {/* COMPONENTE DE NOTIFICAÇÕES */}
+        <NotificationBell />
 
         {/* Perfil do Utilizador */}
         <Box
@@ -218,13 +150,7 @@ const Header: React.FC = () => {
                 fontWeight: 500,
               }}
             >
-              {user?.role === "ADMIN"
-                ? "Administrador"
-                : user?.role === "RESELLER"
-                ? "Revendedor"
-                : user?.role === "PRODUCER"
-                ? "Produtor"
-                : "Utilizador"}
+              {getRoleLabel(user?.role)}
             </Typography>
           </Box>
 
@@ -271,11 +197,11 @@ const Header: React.FC = () => {
             </MenuItem>
           )}
 
-          <MenuItem onClick={() => handleNavigation("/profile")}>
+          <MenuItem onClick={() => handleNavigation("/notifications")}>
             <ListItemIcon>
               <SettingsIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>Configurações</ListItemText>
+            <ListItemText>Notificações</ListItemText>
           </MenuItem>
 
           <Divider sx={{ my: 1 }} />

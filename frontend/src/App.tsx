@@ -7,9 +7,11 @@ import { ophuaTheme } from "./theme";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import UsersManagement from "./pages/admin/UsersManagement";
+import NotificationsPage from "./pages/NotificationsPage"; // ← NOVA PÁGINA
 import Header from "./components/layout/Header";
+import NotificationBell from "./components/NotificationBell"; // ← NOVO COMPONENTE
 import PrivateRoute from "./components/PrivateRoute";
-import { Box } from "@mui/material";
+import { Box, AppBar, Toolbar, Typography, Container } from "@mui/material";
 
 function App() {
   return (
@@ -55,6 +57,21 @@ function App() {
                     <Header />
                     <Box sx={{ p: 3 }}>
                       <UsersManagement />
+                    </Box>
+                  </>
+                </PrivateRoute>
+              }
+            />
+
+            {/* NOVA ROTA DE NOTIFICAÇÕES */}
+            <Route
+              path="/notifications"
+              element={
+                <PrivateRoute>
+                  <>
+                    <Header />
+                    <Box sx={{ p: 3 }}>
+                      <NotificationsPage />
                     </Box>
                   </>
                 </PrivateRoute>
