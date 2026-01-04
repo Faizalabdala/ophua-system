@@ -1,0 +1,71 @@
+# ============ NODE MODULES ============
+node_modules/
+*/node_modules/
+
+# ============ ENVIRONMENT FILES ============
+.env
+.env.*
+*.env
+!.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ============ FRONTEND ============
+frontend/.env
+frontend/dist/
+frontend/build/
+frontend/coverage/
+
+# ============ BACKEND ============
+backend/.env
+backend/prisma/dev.db  # Se usar SQLite
+backend/logs/
+backend/uploads/
+backend/seed.js
+
+# ============ DOCKER ============
+docker/.env
+
+# ============ IDE & EDITORS ============
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ============ OPERATING SYSTEM ============
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ============ LOGS ============
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+logs/
+
+# ============ DEPENDENCIES ============
+jspm_packages/
+
+# ============ TESTING ============
+/coverage
+*.lcov
+
+# ============ BUILD OUTPUTS ============
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# ============ PACKAGE MANAGER ============
+package-lock.json  # Mantenha apenas na raiz se usar workspace
+yarn.lock
+pnpm-lock.yaml
+
+# ============ SEEDS (se tiver dados sensíveis) ============
+backend/seed-prod.js
+backend/seed-local.js

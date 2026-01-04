@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ophua
+      POSTGRES_PASSWORD: ophua123
+      POSTGRES_DB: ophua_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Configurações ESSENCIAIS para conexão externa
+    command: >
+      postgres 
+      -c listen_addresses=*
+      -c password_encryption=scram-sha-256
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

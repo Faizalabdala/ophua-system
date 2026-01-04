@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./ophua.db"
+}
+
+// SQLite não suporta enums, usar strings
+// ADMIN, RESELLER, PRODUCER
+// PENDING, IN_PROGRESS, READY, DELIVERED, CANCELLED
+// PENDING, HALF_PAID, FULLY_PAID, NOT_PAID
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  password     String
+  name         String
+  role         String   // ADMIN, RESELLER, PRODUCER
+  phone        String?
+  isActive     Boolean  @default(true)
+  lastLogin    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  ordersAsReseller Order[] @relation("ResellerOrders")
+  ordersAsProducer Order[] @relation("ProducerOrders")
+}
+
+model Order {
+  id            String   @id @default(cuid())
+  customerName  String
+  theme         String
+  target        String
+  color         String
+  notes         String?
+  
+  status        String   @default("PENDING")        // PENDING, IN_PROGRESS, READY, DELIVERED, CANCELLED
+  paymentStatus String   @default("PENDING")        // PENDING, HALF_PAID, FULLY_PAID, NOT_PAID
+  
+  requestedDate DateTime @default(now())
+  dueDate       DateTime?
+  completedDate DateTime?
+  
+  resellerId    String
+  reseller      User     @relation("ResellerOrders", fields: [resellerId], references: [id], onDelete: Cascade)
+  
+  producerId    String?
+  producer      User?    @relation("ProducerOrders", fields: [producerId], references: [id])
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([resellerId])
+  @@index([producerId])
+  @@index([status])
+  @@index([requestedDate])
+}
