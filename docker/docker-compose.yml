@@ -1,19 +1,41 @@
+version: '3.8'
+
 services:
   postgres:
     image: postgres:15-alpine
+    container_name: ophua_postgres
     environment:
       POSTGRES_USER: ophua
       POSTGRES_PASSWORD: ophua123
       POSTGRES_DB: ophua_db
+      POSTGRES_HOST_AUTH_METHOD: md5
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    # Configurações ESSENCIAIS para conexão externa
+      - ./postgres-init:/docker-entrypoint-initdb.d
     command: >
       postgres 
       -c listen_addresses=*
-      -c password_encryption=scram-sha-256
+      -c max_connections=100
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ophua"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Adicione pgAdmin para gerenciar o banco (opcional)
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: ophua_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@ophua.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
     restart: unless-stopped
 
 volumes:

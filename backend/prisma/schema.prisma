@@ -3,69 +3,84 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./ophua.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
-
-// SQLite não suporta enums, usar strings
-// ADMIN, RESELLER, PRODUCER
-// PENDING, IN_PROGRESS, READY, DELIVERED, CANCELLED
-// PENDING, HALF_PAID, FULLY_PAID, NOT_PAID
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  password     String
-  name         String
-  role         String   // ADMIN, RESELLER, PRODUCER
-  phone        String?
-  isActive     Boolean  @default(true)
-  lastLogin    DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  notifications Notification[] 
-  
-  ordersAsReseller Order[] @relation("ResellerOrders")
-  ordersAsProducer Order[] @relation("ProducerOrders")
-}
-model Notification {
   id        String   @id @default(cuid())
-  userId    String
-  type      String   // "ORDER_CREATED", "STATUS_CHANGED", "PAYMENT", "SYSTEM"
-  title     String
-  message   String
-  metadata  String? 
-  isRead    Boolean  @default(false)
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(RESELLER)
+  phone     String?
+  isActive  Boolean  @default(true)
+  lastLogin DateTime?
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  updatedAt DateTime @updatedAt
+
+  resellerOrders Order[] @relation("OrderReseller")
+  producerOrders Order[] @relation("OrderProducer")
+  notifications  Notification[]
+
+  @@map("users")
 }
 
 model Order {
-  id            String   @id @default(cuid())
+  id            String     @id @default(cuid())
   customerName  String
   theme         String
   target        String
   color         String
   notes         String?
-  
-  status        String   @default("PENDING")        // PENDING, IN_PROGRESS, READY, DELIVERED, CANCELLED
-  paymentStatus String   @default("PENDING")        // PENDING, HALF_PAID, FULLY_PAID, NOT_PAID
-  
-  requestedDate DateTime @default(now())
-  dueDate       DateTime?
+  status        OrderStatus @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING)
+  requestedDate DateTime   @default(now())
   completedDate DateTime?
   
   resellerId    String
-  reseller      User     @relation("ResellerOrders", fields: [resellerId], references: [id], onDelete: Cascade)
+  reseller      User       @relation("OrderReseller", fields: [resellerId], references: [id], onDelete: Cascade)
   
   producerId    String?
-  producer      User?    @relation("ProducerOrders", fields: [producerId], references: [id])
+  producer      User?      @relation("OrderProducer", fields: [producerId], references: [id], onDelete: SetNull)
   
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
-  @@index([resellerId])
-  @@index([producerId])
-  @@index([status])
-  @@index([requestedDate])
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@map("orders")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  metadata  String?
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
+
+enum Role {
+  ADMIN
+  RESELLER
+  PRODUCER
+}
+
+enum OrderStatus {
+  PENDING
+  IN_PROGRESS
+  READY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  HALF_PAID
+  FULLY_PAID
+  NOT_PAID
 }

@@ -11,11 +11,20 @@ const prisma = new PrismaClient();
 // ========== MIDDLEWARES ==========
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000", "http://localhost:5173"], // Adicione 5173,
     credentials: true,
   })
 );
 app.use(express.json());
+
+// ========== VERIFICAÇÃO DE CONEXÃO COM BANCO ==========
+prisma.$connect()
+  .then(() => {
+    console.log("✅ Conectado ao PostgreSQL com Prisma");
+  })
+  .catch((error) => {
+    console.error("❌ Erro ao conectar ao PostgreSQL:", error);
+  });
 
 // ========== MIDDLEWARE DE AUTENTICAÇÃO ==========
 const authenticate = (req, res, next) => {
@@ -29,13 +38,14 @@ const authenticate = (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Adiciona usuário à requisição
+    req.user = decoded;
     next();
   } catch (error) {
     console.error("Erro de autenticação:", error);
     return res.status(401).json({ error: "Token inválido ou expirado" });
   }
 };
+
 
 // ========== MIDDLEWARE PARA ADMIN ==========
 const requireAdmin = (req, res, next) => {
@@ -76,7 +86,7 @@ const createNotification = async (
 app.get("/health", (req, res) => {
   res.json({
     status: "OK",
-    database: "SQLite",
+    database: "PostgreSQL",
     timestamp: new Date().toISOString(),
   });
 });
@@ -794,7 +804,7 @@ app.post("/api/notifications/test", authenticate, async (req, res) => {
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log("🚀 Servidor Ophua rodando na porta " + PORT);
-  console.log("📊 Banco de dados: SQLite");
+  console.log("📊 Banco de dados: PostgreSQL");  
   console.log("🔗 Health check: http://localhost:" + PORT + "/health");
   console.log("🔔 Sistema de notificações ativo");
   console.log("📱 Rotas de notificações disponíveis");

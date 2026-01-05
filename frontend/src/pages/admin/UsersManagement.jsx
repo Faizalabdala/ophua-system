@@ -1,5 +1,5 @@
-// frontend/src/pages/admin/UsersManagement.tsx
-import React, { useState, useEffect } from "react";
+// src/pages/admin/UsersManagement.jsx
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Paper,
@@ -26,47 +26,36 @@ import {
   Alert,
   Box,
   Tooltip,
-} from "@mui/material";
+} from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   LockReset as LockResetIcon,
   Person as PersonIcon,
-} from "@mui/icons-material";
-import api from "../../services/api";
+} from '@mui/icons-material';
+import api from '../../services/api';
 
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  phone?: string;
-  isActive: boolean;
-  lastLogin?: string;
-  createdAt: string;
-}
-
-const UsersManagement: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
+const UsersManagement = () => {
+  const [users, setUsers] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   // Form states
   const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "RESELLER",
-    phone: "",
+    name: '',
+    email: '',
+    password: '',
+    role: 'RESELLER',
+    phone: '',
   });
 
   const [passwordForm, setPasswordForm] = useState({
-    newPassword: "",
-    confirmPassword: "",
+    newPassword: '',
+    confirmPassword: '',
   });
 
   useEffect(() => {
@@ -75,21 +64,21 @@ const UsersManagement: React.FC = () => {
 
   const loadUsers = async () => {
     try {
-      const response = await api.get("/users");
+      const response = await api.get('/users');
       setUsers(response.data);
     } catch (error) {
-      console.error("Erro ao carregar utilizadores:", error);
+      console.error('Erro ao carregar utilizadores:', error);
     }
   };
 
   const handleSubmit = async () => {
     if (!form.name || !form.email || !form.password) {
-      setError("Preencha todos os campos obrigatórios");
+      setError('Preencha todos os campos obrigatórios');
       return;
     }
 
     if (form.password.length < 6) {
-      setError("A password deve ter pelo menos 6 caracteres");
+      setError('A password deve ter pelo menos 6 caracteres');
       return;
     }
 
@@ -102,17 +91,17 @@ const UsersManagement: React.FC = () => {
           role: form.role,
           phone: form.phone,
         });
-        setSuccess("Utilizador atualizado com sucesso");
+        setSuccess('Utilizador atualizado com sucesso');
       } else {
         // Criar novo
-        await api.post("/users", form);
-        setSuccess("Utilizador criado com sucesso");
+        await api.post('/users', form);
+        setSuccess('Utilizador criado com sucesso');
       }
 
       loadUsers();
       handleCloseDialog();
-    } catch (error: any) {
-      setError(error.response?.data?.error || "Erro ao salvar utilizador");
+    } catch (error) {
+      setError(error.response?.data?.error || 'Erro ao salvar utilizador');
     } finally {
       setLoading(false);
     }
@@ -120,12 +109,12 @@ const UsersManagement: React.FC = () => {
 
   const handleChangePassword = async () => {
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setError("As passwords não coincidem");
+      setError('As passwords não coincidem');
       return;
     }
 
     if (passwordForm.newPassword.length < 6) {
-      setError("A password deve ter pelo menos 6 caracteres");
+      setError('A password deve ter pelo menos 6 caracteres');
       return;
     }
 
@@ -134,24 +123,24 @@ const UsersManagement: React.FC = () => {
       await api.patch(`/users/${selectedUser?.id}/password`, {
         newPassword: passwordForm.newPassword,
       });
-      setSuccess("Password alterada com sucesso");
+      setSuccess('Password alterada com sucesso');
       setOpenPasswordDialog(false);
-      setPasswordForm({ newPassword: "", confirmPassword: "" });
-    } catch (error: any) {
-      setError(error.response?.data?.error || "Erro ao alterar password");
+      setPasswordForm({ newPassword: '', confirmPassword: '' });
+    } catch (error) {
+      setError(error.response?.data?.error || 'Erro ao alterar password');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEditUser = (user: User) => {
+  const handleEditUser = (user) => {
     setSelectedUser(user);
     setForm({
       name: user.name,
       email: user.email,
-      password: "", // Não preencher password existente
+      password: '', // Não preencher password existente
       role: user.role,
-      phone: user.phone || "",
+      phone: user.phone || '',
     });
     setOpenDialog(true);
   };
@@ -159,32 +148,32 @@ const UsersManagement: React.FC = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedUser(null);
-    setForm({ name: "", email: "", password: "", role: "RESELLER", phone: "" });
-    setError("");
-    setSuccess("");
+    setForm({ name: '', email: '', password: '', role: 'RESELLER', phone: '' });
+    setError('');
+    setSuccess('');
   };
 
-  const getRoleColor = (role: string) => {
+  const getRoleColor = (role) => {
     switch (role) {
-      case "ADMIN":
-        return "primary";
-      case "RESELLER":
-        return "secondary";
-      case "PRODUCER":
-        return "info";
+      case 'ADMIN':
+        return 'primary';
+      case 'RESELLER':
+        return 'secondary';
+      case 'PRODUCER':
+        return 'info';
       default:
-        return "default";
+        return 'default';
     }
   };
 
-  const getRoleLabel = (role: string) => {
+  const getRoleLabel = (role) => {
     switch (role) {
-      case "ADMIN":
-        return "Administrador";
-      case "RESELLER":
-        return "Revendedor";
-      case "PRODUCER":
-        return "Produtor";
+      case 'ADMIN':
+        return 'Administrador';
+      case 'RESELLER':
+        return 'Revendedor';
+      case 'PRODUCER':
+        return 'Produtor';
       default:
         return role;
     }
@@ -195,24 +184,24 @@ const UsersManagement: React.FC = () => {
       <Paper sx={{ p: 3 }}>
         <Box
           sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
             mb: 3,
           }}
         >
           <Typography
             variant="h5"
-            sx={{ fontWeight: "bold", color: "#1a237e" }}
+            sx={{ fontWeight: 'bold', color: '#1a237e' }}
           >
-            <PersonIcon sx={{ mr: 1, verticalAlign: "middle" }} />
+            <PersonIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
             Gestão de Utilizadores
           </Typography>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => setOpenDialog(true)}
-            sx={{ bgcolor: "#ff6f00", "&:hover": { bgcolor: "#e65100" } }}
+            sx={{ bgcolor: '#ff6f00', '&:hover': { bgcolor: '#e65100' } }}
           >
             Novo Utilizador
           </Button>
@@ -250,22 +239,22 @@ const UsersManagement: React.FC = () => {
                   <TableCell>
                     <Chip
                       label={getRoleLabel(user.role)}
-                      color={getRoleColor(user.role) as any}
+                      color={getRoleColor(user.role)}
                       size="small"
                     />
                   </TableCell>
-                  <TableCell>{user.phone || "-"}</TableCell>
+                  <TableCell>{user.phone || '-'}</TableCell>
                   <TableCell>
                     <Chip
-                      label={user.isActive ? "Ativo" : "Inativo"}
-                      color={user.isActive ? "success" : "error"}
+                      label={user.isActive ? 'Ativo' : 'Inativo'}
+                      color={user.isActive ? 'success' : 'error'}
                       size="small"
                     />
                   </TableCell>
                   <TableCell>
                     {user.lastLogin
-                      ? new Date(user.lastLogin).toLocaleDateString("pt-PT")
-                      : "Nunca"}
+                      ? new Date(user.lastLogin).toLocaleDateString('pt-PT')
+                      : 'Nunca'}
                   </TableCell>
                   <TableCell>
                     <Tooltip title="Editar">
@@ -303,10 +292,10 @@ const UsersManagement: React.FC = () => {
         fullWidth
       >
         <DialogTitle>
-          {selectedUser ? "Editar Utilizador" : "Novo Utilizador"}
+          {selectedUser ? 'Editar Utilizador' : 'Novo Utilizador'}
         </DialogTitle>
         <DialogContent>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
             <TextField
               label="Nome Completo"
               fullWidth
@@ -357,7 +346,7 @@ const UsersManagement: React.FC = () => {
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancelar</Button>
           <Button onClick={handleSubmit} variant="contained" disabled={loading}>
-            {loading ? "A guardar..." : selectedUser ? "Atualizar" : "Criar"}
+            {loading ? 'A guardar...' : selectedUser ? 'Atualizar' : 'Criar'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -371,7 +360,7 @@ const UsersManagement: React.FC = () => {
       >
         <DialogTitle>Alterar Password de {selectedUser?.name}</DialogTitle>
         <DialogContent>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
             <TextField
               label="Nova Password"
               type="password"
@@ -407,7 +396,7 @@ const UsersManagement: React.FC = () => {
             variant="contained"
             disabled={loading}
           >
-            {loading ? "A alterar..." : "Alterar Password"}
+            {loading ? 'A alterar...' : 'Alterar Password'}
           </Button>
         </DialogActions>
       </Dialog>
